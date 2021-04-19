@@ -99,7 +99,8 @@
             this.$refs.popup.forEach(item => {
               item.init()
             })           
-          })   
+          })
+          console.log(this.searchSongList)   
           this.showSongList = true
         } else {
           uni.showToast({
