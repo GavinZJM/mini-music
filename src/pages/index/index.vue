@@ -66,7 +66,7 @@
       },
       bgMusicObj: {
         handler(newVal){
-          this.updateCurrentPlayer(newVal? newVal: null)
+          if(newVal)this.updateCurrentPlayer(newVal) 
         },
         immediate: true        
       }
@@ -201,7 +201,10 @@
         console.log(e)
       },
       stopMusic(musicObj, index){
-        if(musicObj) musicObj.stop()
+        if(musicObj) {
+          musicObj.stop()
+          this.updateCurrentPlayer(null)          
+        }
         this.bgMusicObj = null
         //排他
         if(index !== undefined){
