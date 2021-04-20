@@ -27,6 +27,10 @@
               <i v-if="!listPlayStatus[index].status" @click="stopMusic(bgMusicObj, index)" class="iconfont icon-zanting"></i>
               <i @click="playBgMusic(item,index)" v-else class="iconfont icon-bofang"></i>
             </div>
+            <div class="list-btn">
+              <Button type="primary" class="btn" @click="addToList(item)">添加至歌单</Button>
+              <Button type="primary" class="btn" @click="minusToList(item)">从歌单去除</Button>              
+            </div>
 	      	</u-collapse-item>
 	      </u-collapse>
         <div class="line"></div>
@@ -36,6 +40,7 @@
 </template>
 
 <script>
+  import { mapMutations } from 'vuex'
 	export default {
 		data() {
 			return {
@@ -47,35 +52,46 @@
         bgMusicObj: null
 			}
 		},
+    computed: {
+      listStatus(){
+        return this.$store.state.searchListPlayStatus
+      }
+    },
+    watch: {
+      listStatus: {
+        handler(newVal){
+          this.listPlayStatus = newVal
+        },
+        immediate: true
+      }
+    },
 		onShow() {
+      this.updateSearchListPlayStatus({
+        playStatus: 'blank'
+      })
+      this.searchSongList.forEach((item) => {
+        if(item.id === this.$store.state.currentMusic.id){
+          this.updateSearchListPlayStatus({
+            playStatus: 'push',
+            value: false
+          })
+        } else {
+          this.updateSearchListPlayStatus({
+            playStatus: 'push',
+            value: true
+          })        
+        }
+      })
 		},
 		methods: {
-      playBgMusic(item,index){
-        this.stopMusic(this.bgMusicObj, index)
-        this.listPlayStatus[index].status = false
-        this.bgMusicObj = uni.getBackgroundAudioManager()
-        this.bgMusicObj.title = item.album
-        this.bgMusicObj.epname = item.name
-        this.bgMusicObj.singer = item.artist.join()
-        this.bgMusicObj.coverImgUrl = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic.uzzf.com%2Fup%2F2017-4%2F2017461348573471.png&refer=http%3A%2F%2Fpic.uzzf.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1619254877&t=458c9f82f1589400ffb3d0235784c191'
-        // 设置了 src 之后会自动播放
-        this.bgMusicObj.src = `http://music.163.com/song/media/outer/url?id=${item.id}.mp3`
-
-        this.bgMusicObj.play()
-        this.bgMusicObj.onPlay(() => {
-					console.log('开始播放');
-				});				
-        this.bgMusicObj.onStop(() => {
-					console.log('停止播放');
-				});
-				
-				this.bgMusicObj.onPause(() => {
-					console.log('暂停播放');
-				});	
-				this.bgMusicObj.onEnded(() => {
-					//初始化 需要的参数
-					console.log('自然播放结束事件');
-				});
+      ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateSearchListPlayStatus']),
+      addToList(item){
+        this.addList(item)
+        console.log(this)
+      },
+      minusToList(item){
+        this.minusList(item)
+        console.log(this)
       },
       async searchSong(){
         if(!this.searchSongName){
@@ -109,6 +125,68 @@
           })
         }
       },
+      playBgMusic(item,index){
+        // 这里要更新当前音乐把他记录下来 然后每次搜索打开结果后要索引相同的歌曲 如果正在播放 则显示播放按钮
+        this.updateCurrentMusic({
+          ...item,
+          type: 'add'
+        })
+        this.stopMusic(this.bgMusicObj, index)
+        this.addToList(item)
+        let itemId = item.id
+        //index 为 undefined 会走 歌单播放逻辑  就是下面的递归
+        index !== undefined && (this.updateSearchListPlayStatus({
+          playStatus: 'change',
+          index,
+          value: false
+        }))
+        this.bgMusicObj = uni.getBackgroundAudioManager()
+        this.bgMusicObj.title = item.album
+        this.bgMusicObj.epname = item.name
+        this.bgMusicObj.singer = item.artist.join()
+        this.bgMusicObj.coverImgUrl = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic.uzzf.com%2Fup%2F2017-4%2F2017461348573471.png&refer=http%3A%2F%2Fpic.uzzf.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1619254877&t=458c9f82f1589400ffb3d0235784c191'
+        // 设置了 src 之后会自动播放
+        this.bgMusicObj.src = `http://music.163.com/song/media/outer/url?id=${item.id}.mp3`
+
+        this.bgMusicObj.play()
+        this.bgMusicObj.onPlay(() => {
+					console.log('开始播放');
+				});				
+        this.bgMusicObj.onStop(() => {
+					console.log('停止播放');
+				});
+				
+				this.bgMusicObj.onPause(() => {
+					console.log('暂停播放');
+				});
+        this.bgMusicObj.onError(()=>{
+          this.playNext(itemId)
+          this.updateCurrentMusic({
+            type: 'del'
+          })
+        })	
+				this.bgMusicObj.onEnded(() => {
+          this.playNext(itemId)
+          this.updateCurrentMusic({
+            type: 'del'
+          })
+				});
+      },
+      playNext(itemId){
+          // 这里点播完进行歌单播放
+          if(this.$store.state.currentIndex >= this.$store.state.musicList.length-1){
+            this.updateCurrentIndex(0)
+            console.log('歌单播放结束')
+          } else {
+            this.updateCurrentIndex()
+            // 如果播放刚结束的这一条歌为 歌单正要播放的这一条
+            if(itemId === this.$store.state.musicList[this.$store.state.currentIndex - 1].id){
+              this.updateCurrentIndex()
+            }
+            this.$store.state.musicList[this.$store.state.currentIndex - 1] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex - 1])
+					  console.log('自然播放结束事件');
+          }
+      },
       playMusic(e){
         console.log(e)
       },
@@ -116,9 +194,13 @@
         if(musicObj) musicObj.stop()
         this.bgMusicObj = null
         //排他
-        this.listPlayStatus.forEach(i => {
-          i.status = true
-        })
+        if(index !== undefined){
+          this.updateSearchListPlayStatus({
+            playStatus: 'changeAll',
+            value: true
+          })         
+        }
+
       }
 		}
 	}
@@ -130,6 +212,16 @@
   }
   /deep/.u-collapse-item {
     position: relative;
+    .list-btn {
+      padding-top: 30px;
+      padding-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .btn {
+        font-size: 12px;
+      }
+    }
   }
   .list-play-btn {
     position: absolute;
