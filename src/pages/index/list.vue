@@ -58,6 +58,12 @@
           this.listPlayStatus = newVal
         },
         immediate: true
+      },
+      bgMusicObj: {
+        handler(newVal){
+          this.updateCurrentPlayer(newVal? newVal: null)
+        },
+        immediate: true        
       }
     },
     onShow() {
@@ -80,7 +86,7 @@
     },
 
 		methods: {
-      ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateListPlayStatus']),
+      ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateListPlayStatus', 'delAllList', 'updateCurrentPlayer']),
       addToList(item){
         this.addList(item)
         console.log(this)
@@ -90,9 +96,7 @@
         console.log(this)
       },
       delAll(){
-        this.updateListPlayStatus({
-          playStatus: 'blank'
-        })
+        this.delAllList()
       },
       playBgMusic(item,index){
         // 这里要更新当前音乐把他记录下来 然后每次搜索打开结果后要索引相同的歌曲 如果正在播放 则显示播放按钮

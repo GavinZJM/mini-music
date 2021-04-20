@@ -55,7 +55,7 @@
     computed: {
       listStatus(){
         return this.$store.state.searchListPlayStatus
-      }
+      },
     },
     watch: {
       listStatus: {
@@ -63,6 +63,12 @@
           this.listPlayStatus = newVal
         },
         immediate: true
+      },
+      bgMusicObj: {
+        handler(newVal){
+          this.updateCurrentPlayer(newVal? newVal: null)
+        },
+        immediate: true        
       }
     },
 		onShow() {
@@ -84,7 +90,7 @@
       })
 		},
 		methods: {
-      ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateSearchListPlayStatus']),
+      ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateSearchListPlayStatus', 'updateCurrentPlayer']),
       addToList(item){
         this.addList(item)
         console.log(this)
@@ -106,10 +112,14 @@
         })
         if(res.statusCode === 200){
           this.searchSongList = res.data
-          this.listPlayStatus = this.searchSongList.map((item)=>{
+          let list = this.searchSongList.map((item)=>{
             return {
               status: true
             }
+          })
+          this.updateSearchListPlayStatus({
+            playStatus: 'cover',
+            arr: list
           })
           this.$nextTick(()=>{
             this.$refs.popup.forEach(item => {

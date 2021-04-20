@@ -20,6 +20,12 @@
         "iconPath": "static/tabbar/mine.png",
         "selectedIconPath": "static/tabbar/mine-on.png",
         "text": "歌单列表"
+      },
+      {
+        "pagePath": "pages/index/detail",
+        "iconPath": "static/tabbar/mine.png",
+        "selectedIconPath": "static/tabbar/mine-on.png",
+        "text": "歌曲详情"
       }
     ]
   },
@@ -41,6 +47,12 @@
 			"path": "pages/index/list",
 			"style": {
 				"navigationBarTitleText": "歌单列表"
+			}
+		},
+		{
+			"path": "pages/index/detail",
+			"style": {
+				"navigationBarTitleText": "歌曲详情"
 			}
 		}
 	],

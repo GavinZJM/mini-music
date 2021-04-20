@@ -4,6 +4,7 @@ import Vuex from 'vuex'
 Vue.use(Vuex)
 const store = new Vuex.Store({
   state: {
+    currentPlayer: {}, //当前的播放器对象
     musicList:[],
     currentIndex: 0,
     currentMusic: {},
@@ -11,6 +12,9 @@ const store = new Vuex.Store({
     searchListPlayStatus: [], // 搜索列表播放状态
   },
   mutations: {
+    updateCurrentPlayer(state, obj){
+      state.currentPlayer = obj
+    },
     updateListPlayStatus(state, item){
       // 清空
       if(item.playStatus === 'blank'){
@@ -59,7 +63,6 @@ const store = new Vuex.Store({
             status: item.value
           }
         }
-        console.log('change', state)
       }
       // cover
       if(item.playStatus === 'cover'){
@@ -130,6 +133,9 @@ const store = new Vuex.Store({
       })
       return
     },
+    delAllList(state){
+      state.musicList = []
+    }
   }
 })
 
