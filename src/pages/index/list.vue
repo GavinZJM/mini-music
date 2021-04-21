@@ -134,11 +134,11 @@
         // this.addToList(item)
         let itemId = item.id
         //index 为 undefined 会走 歌单播放逻辑  就是下面的递归
-        index !== undefined && (this.updateListPlayStatus({
-          playStatus: 'change',
-          index,
-          value: false
-        }))
+        // index !== undefined && (this.updateListPlayStatus({
+        //   playStatus: 'change',
+        //   index,
+        //   value: false
+        // }))
         this.bgMusicObj = uni.getBackgroundAudioManager()
         this.bgMusicObj.title = item.album
         this.bgMusicObj.epname = item.name
@@ -159,10 +159,10 @@
 					console.log('暂停播放');
 				});
         this.bgMusicObj.onError(()=>{
-          this.playNext(itemId)
           this.updateCurrentMusic({
             type: 'del'
           })
+          this.playNext(itemId)
         })	
 				this.bgMusicObj.onEnded(() => {
           this.updateCurrentMusic({
@@ -179,55 +179,12 @@
           } else {
             this.updateCurrentIndex()
             // 如果播放刚结束的这一条歌为 歌单正要播放的这一条
-            if(itemId === this.$store.state.musicList[this.$store.state.currentIndex - 1].id){
-              this.updateCurrentIndex()
-            }
+            // if(itemId === this.$store.state.musicList[this.$store.state.currentIndex - 1].id){
+            //   this.updateCurrentIndex()
+            // }
             this.$store.state.musicList[this.$store.state.currentIndex - 1] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex - 1])
 					  console.log('自然播放结束事件');
           }
-      },
-      async searchSong(){
-        if(!this.searchSongName){
-          uni.showToast({
-            title: '请输入歌名',
-            icon: 'none'
-          })
-          return
-        }
-        let res = await this.$api.searchSong({
-          search: this.searchSongName
-        })
-        if(res.statusCode === 200){
-          this.searchSongList = res.data
-          let list = this.searchSongList.map((item)=>{
-            if(item.id === this.$store.state.currentMusic.id){
-              return {
-                status: false
-              }
-            } else {
-              return {
-              status: true
-              }
-            }
-
-          })
-          this.updateListPlayStatus({
-            playStatus: 'cover',
-            arr: list
-          })
-          this.$nextTick(()=>{
-            this.$refs.popup.forEach(item => {
-              item.init()
-            })           
-          })
-          console.log(this.searchSongList)   
-          this.showSongList = true
-        } else {
-          uni.showToast({
-            title: '搜索失败',
-            icon: 'none'
-          })
-        }
       },
       playMusic(e){
         console.log(e)
@@ -239,12 +196,12 @@
         }
         this.bgMusicObj = null
         //排他
-        if(index !== undefined){
-          this.updateListPlayStatus({
-            playStatus: 'changeAll',
-            value: true
-          })          
-        }
+        // if(index !== undefined){
+        //   this.updateListPlayStatus({
+        //     playStatus: 'changeAll',
+        //     value: true
+        //   })          
+        // }
 
       }
 		}

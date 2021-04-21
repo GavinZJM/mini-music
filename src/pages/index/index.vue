@@ -194,10 +194,10 @@
 					console.log('暂停播放');
 				});
         this.bgMusicObj.onError(()=>{
-          this.playNext(itemId)
           this.updateCurrentMusic({
             type: 'del'
           })
+          this.playNext(itemId)
         })	
 				this.bgMusicObj.onEnded(() => {
           this.updateCurrentMusic({
