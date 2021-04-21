@@ -29,7 +29,7 @@
             </div>
             <div class="list-btn">
               <Button type="primary" class="btn" @click="addToList(item)">添加至歌单</Button>
-              <Button type="primary" class="btn" @click="minusToList(item)">从歌单去除</Button>              
+              <!-- <Button type="primary" class="btn" @click="minusToList(item)">从歌单去除</Button> -->
             </div>
 	      	</u-collapse-item>
 	      </u-collapse>
@@ -72,22 +72,7 @@
       }
     },
 		onShow() {
-      this.updateSearchListPlayStatus({
-        playStatus: 'blank'
-      })
-      this.searchSongList.forEach((item) => {
-        if(item.id === this.$store.state.currentMusic.id){
-          this.updateSearchListPlayStatus({
-            playStatus: 'push',
-            value: false
-          })
-        } else {
-          this.updateSearchListPlayStatus({
-            playStatus: 'push',
-            value: true
-          })        
-        }
-      })
+
 		},
 		methods: {
       ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateSearchListPlayStatus', 'updateCurrentPlayer']),
@@ -112,6 +97,9 @@
         })
         if(res.statusCode === 200){
           this.searchSongList = res.data
+          this.updateSearchListPlayStatus({
+            playStatus: 'blank'
+          })
           let list = this.searchSongList.map((item)=>{
             return {
               status: true
@@ -120,6 +108,15 @@
           this.updateSearchListPlayStatus({
             playStatus: 'cover',
             arr: list
+          })
+          this.searchSongList.forEach((item, index) => {
+            if(item.id === this.$store.state.currentMusic.id){
+              this.updateSearchListPlayStatus({
+                playStatus: 'change',
+                value: false,
+                index
+              })
+            }
           })
           this.$nextTick(()=>{
             this.$refs.popup.forEach(item => {
@@ -135,17 +132,17 @@
           })
         }
       },
-      playBgMusic(item,index){
+      playBgMusic(item,index,isFromList = false){
         // 这里要更新当前音乐把他记录下来 然后每次搜索打开结果后要索引相同的歌曲 如果正在播放 则显示播放按钮
         this.updateCurrentMusic({
           ...item,
           type: 'add'
         })
-        this.stopMusic(this.bgMusicObj, index)
-        this.addToList(item)
+        this.stopMusic(this.bgMusicObj, index, isFromList)
+        !isFromList && this.addToList(item)
         let itemId = item.id
         //index 为 undefined 会走 歌单播放逻辑  就是下面的递归
-        index !== undefined && (this.updateSearchListPlayStatus({
+        !isFromList && (this.updateSearchListPlayStatus({
           playStatus: 'change',
           index,
           value: false
@@ -176,10 +173,10 @@
           })
         })	
 				this.bgMusicObj.onEnded(() => {
-          this.playNext(itemId)
           this.updateCurrentMusic({
             type: 'del'
           })
+          this.playNext(itemId)
 				});
       },
       playNext(itemId){
@@ -193,27 +190,26 @@
             if(itemId === this.$store.state.musicList[this.$store.state.currentIndex - 1].id){
               this.updateCurrentIndex()
             }
-            this.$store.state.musicList[this.$store.state.currentIndex - 1] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex - 1])
+            this.$store.state.musicList[this.$store.state.currentIndex - 1] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex - 1], undefined, true)
 					  console.log('自然播放结束事件');
           }
       },
       playMusic(e){
         console.log(e)
       },
-      stopMusic(musicObj, index){
+      stopMusic(musicObj, index, isFromList){
         if(musicObj) {
           musicObj.stop()
           this.updateCurrentPlayer(null)          
         }
         this.bgMusicObj = null
         //排他
-        if(index !== undefined){
+        if(!isFromList){
           this.updateSearchListPlayStatus({
             playStatus: 'changeAll',
             value: true
           })         
         }
-
       }
 		}
 	}

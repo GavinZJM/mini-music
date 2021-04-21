@@ -1,7 +1,10 @@
 <template>
   <div>
     <div v-if="currentM.name" class="title">{{ `--${currentM.name}--` }}</div>
-    <div  v-for="(item, index) in lyric" :key="index">
+    <div v-if="!lyric.length">
+      <p class="lyric_p">搜索无歌词</p>
+    </div>
+    <div v-else  v-for="(item, index) in lyric" :key="index">
       <p class="lyric_p" :class="[Number(item.time) < Number(currentT) ?'sing':'no-sing']">{{ item.value }}</p>      
     </div>
   </div>
@@ -29,13 +32,13 @@ export default {
       } else {
         return 0
       }
-
     }
   },
   watch: {
     currentMusic: {
       handler(newVal){
         this.currentM = newVal
+        this.getLyric()
       },
       immediate: true
     },
@@ -47,12 +50,11 @@ export default {
     }
   },
   onShow(){
-    this.getLyric()
     clearInterval(this.st)
     if(this.$store.state.currentPlayer){
       this.st = setInterval(()=>{
         this.currentT = this.$store.state.currentPlayer.currentTime* 1000
-      },200)
+      },100)
     }
 
   },
@@ -65,15 +67,19 @@ export default {
       let res = await this.$api.searchLyric({
         lyric: this.$store.state.currentMusic.lyric_id        
       })
-      let result = res.data.lyric.replace(/\n/g, '^')
-      result = result.split('^')
-      result = result.map(item=>{
-        return {
-          value: item.split(']')[1],
-          time: this.secondToMill(item.split(']')[0].split('[')[1])
-        }
-      })
-      this.lyric = result
+      if(res.data.lyric){
+        let result = res.data.lyric.replace(/\n/g, '^')
+        result = result.split('^')
+        result = result.map(item=>{
+          return {
+            value: item.split(']')[1],
+            time: this.secondToMill(item.split(']')[0].split('[')[1])
+          }
+        })
+        this.lyric = result        
+      } else {
+        this.lyric = []
+      }
     },
     isRed(index){
       if(this.lyric[index] > this.currentT){

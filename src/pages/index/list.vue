@@ -139,10 +139,10 @@
           })
         })	
 				this.bgMusicObj.onEnded(() => {
-          this.playNext(itemId)
           this.updateCurrentMusic({
             type: 'del'
           })
+          this.playNext(itemId)
 				});
       },
       playNext(itemId){
