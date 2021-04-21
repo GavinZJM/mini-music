@@ -44,9 +44,35 @@
       },
       listStatus(){
         return this.$store.state.listPlayStatus
+      },
+      currentMusic(){
+        return this.$store.state.currentMusic
       }
     },
     watch: {
+      currentMusic: {
+        handler(newVal){
+          if(newVal){
+            this.updateListPlayStatus({
+              playStatus: 'blank'
+            })
+            this.list.forEach((item) => {
+              if(item.id === this.$store.state.currentMusic.id){
+                this.updateListPlayStatus({
+                  playStatus: 'push',
+                  value: false
+                })
+              } else {
+                this.updateListPlayStatus({
+                  playStatus: 'push',
+                  value: true
+                })      
+              }
+            })            
+          }
+        },
+        immediate: true,
+      },
       musicList: {
         handler(newVal){
           this.list = newVal

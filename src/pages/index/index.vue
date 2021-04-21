@@ -49,12 +49,16 @@
         searchSongList: [],
         listPlayStatus: [],
         showSongList: false,
-        bgMusicObj: null
+        bgMusicObj: null,
+        currentM: null,
 			}
 		},
     computed: {
       listStatus(){
         return this.$store.state.searchListPlayStatus
+      },
+      currentMusic(){
+        return this.$store.state.currentMusic
       },
     },
     watch: {
@@ -69,7 +73,42 @@
           if(newVal)this.updateCurrentPlayer(newVal) 
         },
         immediate: true        
-      }
+      },
+      currentMusic: {
+        handler(newVal){
+          if(newVal){
+            this.updateSearchListPlayStatus({
+              playStatus: 'blank'
+            })
+            // let list = this.searchSongList.map((item)=>{
+            //   return {
+            //     status: true
+            //   }
+            // })
+            // this.updateSearchListPlayStatus({
+            //   playStatus: 'cover',
+            //   arr: list
+            // })
+            this.searchSongList.forEach((item, index) => {
+              if(item.id === this.$store.state.currentMusic.id){
+                this.updateSearchListPlayStatus({
+                  playStatus: 'change',
+                  value: false,
+                  index
+                })
+              } else {
+                this.updateSearchListPlayStatus({
+                  playStatus: 'change',
+                  value: true,
+                  index
+                })
+              }
+            })
+          }
+          this.currentM = newVal
+        },
+        immediate: true
+      },
     },
 		onShow() {
 
@@ -97,9 +136,6 @@
         })
         if(res.statusCode === 200){
           this.searchSongList = res.data
-          this.updateSearchListPlayStatus({
-            playStatus: 'blank'
-          })
           let list = this.searchSongList.map((item)=>{
             return {
               status: true
@@ -108,15 +144,6 @@
           this.updateSearchListPlayStatus({
             playStatus: 'cover',
             arr: list
-          })
-          this.searchSongList.forEach((item, index) => {
-            if(item.id === this.$store.state.currentMusic.id){
-              this.updateSearchListPlayStatus({
-                playStatus: 'change',
-                value: false,
-                index
-              })
-            }
           })
           this.$nextTick(()=>{
             this.$refs.popup.forEach(item => {
