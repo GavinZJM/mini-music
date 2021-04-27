@@ -9,6 +9,19 @@
 
 <script>
 export default {
+data(){
+  return {
+  }
+},
+onShow(){
+
+  // uni.getStorage({
+  //   key: 'musicList',
+  //   success: (res)=>{
+  //     _this.updateList(res.data.length>0? res.data: [])
+  //   }
+  // })
+},
 methods: {
   login(){
     this.$wx.login({

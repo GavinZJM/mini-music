@@ -113,7 +113,11 @@ const store = new Vuex.Store({
         uni.showToast({
           title: '添加成功',
           icon: 'none'
-        })      
+        })
+        uni.setStorage({
+          key: 'musicList',
+          data: state.musicList
+        })    
       }
     },
     minusList(state,music){
@@ -132,6 +136,9 @@ const store = new Vuex.Store({
         }
       })
       return
+    },
+    updateList(state, music){
+      state.musicList = music
     },
     delAllList(state){
       state.musicList = []

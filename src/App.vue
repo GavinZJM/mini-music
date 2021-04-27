@@ -1,14 +1,30 @@
 <script>
+  import { mapMutations } from 'vuex'
 	export default {
 		onLaunch: function() {
 			console.log('App Launch')
 		},
 		onShow: function() {
+      uni.getStorage({
+        key: 'music_list',
+        success:(res) =>{
+          this.updateList(res.data)
+        }
+      })
 			console.log('App Show')
 		},
 		onHide: function() {
+      let musicList = this.$store.state.musicList
+      uni.setStorage({
+        key:"music_list",
+        data: musicList,
+      })
 			console.log('App Hide')
-		}
+		},
+    computed: {},
+    methods: {
+      ...mapMutations(['updateList'])
+    }
 	}
 </script>
 <style>
