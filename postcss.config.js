@@ -2,6 +2,7 @@ const path = require('path')
 module.exports = {
   parser: require('postcss-comment'),
   plugins: [
+    require('postcss-pxtorpx-pro'),
     require('postcss-import')({
       resolve (id, basedir, importOptions) {
         if (id.startsWith('~@/')) {
