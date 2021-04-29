@@ -10,13 +10,25 @@
       </div>
       <u-button size="mini" class="search-btn" type="success" @click="searchSong">搜索</u-button>
     </div>
+    <div class="rand_music">
+        <view @click="searchRandMusic('热歌榜', true)" hover-class="hover-class" class="rand_music_item">热歌榜</view>
+        <view @click="searchRandMusic('新歌榜', true)" hover-class="hover-class" class="rand_music_item">新歌榜</view>
+        <view @click="searchRandMusic('飙升榜', true)" hover-class="hover-class" class="rand_music_item">飙升榜</view>
+        <view @click="searchRandMusic('抖音榜', true)" hover-class="hover-class" class="rand_music_item">抖音榜</view>
+        <view @click="searchRandMusic('电音榜', true)" hover-class="hover-class" class="rand_music_item">电音榜</view>
+    </div>
+    <!-- 正常歌曲搜索 -->
     <u-popup v-model="showSongList" mode="left" :accordion="false" :width="600" :custom-style="{'padding-left':'10px','padding-right':'5px'}">
 			<view v-for="(item, index) in searchSongList" :key="item.id" type="success">
 	      <u-collapse ref="popup" :arrow="false">
 	      	<u-collapse-item class="collapse-item" :title="`专辑：${item.album}`" :disabled="true" :open="true" @click="playMusic">
+            <view v-if="item.picurl" class="mb5">
+              <view><img class="mb5-cover" :src="item.picurl" /></view>
+            </view>
 	      		<view class="mb5">
               <view>专辑：</view><view class="mb5-content">{{item.album}}</view>
             </view>
+            
 	      		<view class="mb5">
               <view>歌曲：</view><view class="mb5-content">{{item.name}}</view>
             </view>
@@ -47,8 +59,11 @@
 				title: 'mini音乐',
         searchSongName: '',
         searchSongList: [],
+        searchRandMusicList: [],
+        searchRandMusicLimit: 10,
         listPlayStatus: [],
         showSongList: false,
+        showRandSongList: false,
         bgMusicObj: null,
         currentM: null,
 			}
@@ -146,6 +161,7 @@
             arr: list
           })
           this.$nextTick(()=>{
+            this.showSongList = true
             this.$refs.popup.forEach(item => {
               item.init()
             })           
@@ -158,6 +174,57 @@
             icon: 'none'
           })
         }
+      },
+      async searchRandMusic(sort, isInit){
+        if(isInit){
+          this.searchSongList = []
+        }
+        let res = await this.$api.searchRandMusic({
+          sort,
+          format: 'json'
+        })
+        if(res.statusCode === 200){
+          //如果返回重复的歌曲则重新搜索
+          let isPush = true
+          this.searchSongList.forEach(item => {
+            if(item.id === res.data.data.url.match(/id=(\d)+/)[1]){
+              isPush= false
+            }
+          })
+          if(isPush){
+            this.searchSongList.push({
+              type1: 'rand_music',
+              album: sort,
+              id: +res.data.data.url.match(/id=(\d+)/)[1],
+              artist: [ res.data.data.artistsname ],
+              name: res.data.data.name,
+              lyric_id: +res.data.data.url.match(/id=(\d+)/)[1],
+              rand_picurl: res.data.data.picurl,
+              rand_url: res.data.data.url
+            })            
+          }
+
+          if(this.searchSongList.length >9) {
+            let list = this.searchSongList.map((item)=>{
+              return {
+                status: true
+              }
+            })
+            this.updateSearchListPlayStatus({
+              playStatus: 'cover',
+              arr: list
+            })
+            this.$nextTick(()=>{
+              this.$refs.popup.forEach(item => {
+                item.init()
+              })           
+            })
+            this.showSongList=true
+            return
+          }
+          this.searchRandMusic(sort)
+        }
+        
       },
       playBgMusic(item,index,isFromList = false){
         // 这里要更新当前音乐把他记录下来 然后每次搜索打开结果后要索引相同的歌曲 如果正在播放 则显示播放按钮
@@ -178,9 +245,9 @@
         this.bgMusicObj.title = item.album
         this.bgMusicObj.epname = item.name
         this.bgMusicObj.singer = item.artist.join()
-        this.bgMusicObj.coverImgUrl = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic.uzzf.com%2Fup%2F2017-4%2F2017461348573471.png&refer=http%3A%2F%2Fpic.uzzf.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1619254877&t=458c9f82f1589400ffb3d0235784c191'
+        this.bgMusicObj.coverImgUrl = item.type1 === 'rand_music'? item.rand_picurl :'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic.uzzf.com%2Fup%2F2017-4%2F2017461348573471.png&refer=http%3A%2F%2Fpic.uzzf.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1619254877&t=458c9f82f1589400ffb3d0235784c191'
         // 设置了 src 之后会自动播放
-        this.bgMusicObj.src = `http://music.163.com/song/media/outer/url?id=${item.id}.mp3`
+        this.bgMusicObj.src = item.type1 === 'rand_music' ? item.rand_url :`http://music.163.com/song/media/outer/url?id=${item.id}.mp3`
 
         this.bgMusicObj.play()
         this.bgMusicObj.onPlay(() => {
@@ -214,10 +281,10 @@
           } else {
             this.updateCurrentIndex()
             // 如果播放刚结束的这一条歌为 歌单正要播放的这一条
-            if(itemId === this.$store.state.musicList[this.$store.state.currentIndex - 1].id){
+            if(itemId === this.$store.state.musicList[this.$store.state.currentIndex].id){
               this.updateCurrentIndex()
             }
-            this.$store.state.musicList[this.$store.state.currentIndex - 1] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex - 1], undefined, true)
+            this.$store.state.musicList[this.$store.state.currentIndex] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex], undefined, true)
 					  console.log('自然播放结束事件');
           }
       },
@@ -243,6 +310,9 @@
 </script>
 
 <style lang="scss" scoped>
+  .hover-class {
+    color: red!important;
+  }
   /deep/.u-collapse-title {
     padding-left: 5px;
   }
@@ -277,6 +347,10 @@
     margin-bottom: 5px;
     padding-left: 5px;
     display: flex;
+    .mb5-cover {
+      width: 130px;
+      height: 120px;
+    }
     .mb5-content {
       width: 190px;
     }
@@ -305,6 +379,16 @@
     .search-btn {
       width: 60px;
       margin-left: 20px;
+    }
+  }
+  .rand_music {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-around;
+    .rand_music_item {
+      margin-left: 5px;
+      margin-right: 5px;
+      color: skyblue;
     }
   }
 	.logo {

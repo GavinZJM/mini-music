@@ -21,7 +21,6 @@
       })
 			console.log('App Hide')
 		},
-    computed: {},
     methods: {
       ...mapMutations(['updateList'])
     }

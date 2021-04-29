@@ -65,7 +65,7 @@ export default {
     async getLyric(){
       this.lyric = ''
       let res = await this.$api.searchLyric({
-        lyric: this.$store.state.currentMusic.lyric_id        
+        lyric: this.$store.state.currentMusic.lyric_id
       })
       if(res.data.lyric){
         let result = res.data.lyric.replace(/\n/g, '^')

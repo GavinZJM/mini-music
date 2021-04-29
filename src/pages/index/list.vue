@@ -4,7 +4,10 @@
 		<view v-for="(item, index) in list" :key="item.id" type="success">
 	    <u-collapse ref="popup" :arrow="false">
 	    	<u-collapse-item class="collapse-item" :title="`专辑：${item.album}`" :disabled="true" :open="true" @click="playMusic">
-	    		<view class="mb5">
+	    		<view v-if="item.picurl" class="mb5">
+            <view><img class="mb5-cover" :src="item.picurl" /></view>
+          </view>
+          <view class="mb5">
             <view>专辑：</view><view class="mb5-content">{{item.album}}</view>
           </view>
 	    		<view class="mb5">
@@ -130,6 +133,7 @@
           ...item,
           type: 'add'
         })
+        this.updateCurrentIndex(index)
         this.stopMusic(this.bgMusicObj, index)
         // this.addToList(item)
         let itemId = item.id
@@ -143,10 +147,10 @@
         this.bgMusicObj.title = item.album
         this.bgMusicObj.epname = item.name
         this.bgMusicObj.singer = item.artist.join()
-        this.bgMusicObj.coverImgUrl = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic.uzzf.com%2Fup%2F2017-4%2F2017461348573471.png&refer=http%3A%2F%2Fpic.uzzf.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1619254877&t=458c9f82f1589400ffb3d0235784c191'
+        this.bgMusicObj.coverImgUrl = (item.type1 === 'rand_music'? item.rand_picurl :'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic.uzzf.com%2Fup%2F2017-4%2F2017461348573471.png&refer=http%3A%2F%2Fpic.uzzf.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1619254877&t=458c9f82f1589400ffb3d0235784c191')
         // 设置了 src 之后会自动播放
-        this.bgMusicObj.src = `http://music.163.com/song/media/outer/url?id=${item.id}.mp3`
-
+        this.bgMusicObj.src = (item.type1 === 'rand_music' ? item.rand_url :`http://music.163.com/song/media/outer/url?id=${item.id}.mp3`)
+        console.log(this.bgMusicObj)
         this.bgMusicObj.play()
         this.bgMusicObj.onPlay(() => {
 					console.log('开始播放');
@@ -182,7 +186,7 @@
             // if(itemId === this.$store.state.musicList[this.$store.state.currentIndex - 1].id){
             //   this.updateCurrentIndex()
             // }
-            this.$store.state.musicList[this.$store.state.currentIndex - 1] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex - 1])
+            this.$store.state.musicList[this.$store.state.currentIndex] && this.playBgMusic(this.$store.state.musicList[this.$store.state.currentIndex])
 					  console.log('自然播放结束事件');
           }
       },
@@ -196,12 +200,12 @@
         }
         this.bgMusicObj = null
         //排他
-        // if(index !== undefined){
-        //   this.updateListPlayStatus({
-        //     playStatus: 'changeAll',
-        //     value: true
-        //   })          
-        // }
+        if(index !== undefined){
+          this.updateListPlayStatus({
+            playStatus: 'changeAll',
+            value: true
+          })          
+        }
 
       }
 		}
@@ -243,6 +247,10 @@
     margin-bottom: 5px;
     padding-left: 5px;
     display: flex;
+    .mb5-cover {
+      width: 130px;
+      height: 120px;
+    }
     .mb5-content {
       width: 190px;
     }

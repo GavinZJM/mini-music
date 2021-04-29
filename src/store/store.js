@@ -90,7 +90,7 @@ const store = new Vuex.Store({
       }
     },
     addList(state,music){
-      if(state.musicList.length > 10) {
+      if(state.musicList.length > 500) {
         uni.showToast({
           title: '歌单空间已经溢满',
           icon: 'none'
@@ -113,17 +113,18 @@ const store = new Vuex.Store({
         uni.showToast({
           title: '添加成功',
           icon: 'none'
-        })
-        uni.setStorage({
-          key: 'musicList',
-          data: state.musicList
-        })    
+        })   
       }
     },
     minusList(state,music){
       state.musicList.forEach((item, index)=>{
         if(item.id === music.id){
           state.musicList.splice(index,1)
+          if(state.currentIndex >= index){
+            let curIndex = state.currentIndex
+            state.currentIndex = curIndex ? curIndex-- : 0
+            state.listPlayStatus.shift()
+          }
           uni.showToast({
             title: '移除成功',
             icon: 'none'
@@ -142,8 +143,19 @@ const store = new Vuex.Store({
     },
     delAllList(state){
       state.musicList = []
+      state.currentIndex = 0
     }
-  }
+  },
+  getters: {
+    getterMusicListLen(state){
+      let musicList = this.$store.state.musicList
+      uni.setStorage({
+        key:"music_list",
+        data: musicList,
+      })
+      return state.musicList
+    }
+  },
 })
 
 export default store
