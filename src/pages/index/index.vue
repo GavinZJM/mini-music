@@ -1,5 +1,6 @@
 <template>
 	<view class="content">
+    <u-loading v-if="isLoading" class="search-loading" color="green" :show="isLoading"></u-loading>
 		<image class="logo" src="/static/logo.png"></image>
 		<view>
 			<text class="title">{{title}}</text>
@@ -22,9 +23,9 @@
 			<view v-for="(item, index) in searchSongList" :key="item.id" type="success">
 	      <u-collapse ref="popup" :arrow="false">
 	      	<u-collapse-item class="collapse-item" :title="`专辑：${item.album}`" :disabled="true" :open="true" @click="playMusic">
-            <view v-if="item.picurl" class="mb5">
-              <view><img class="mb5-cover" :src="item.picurl" /></view>
-            </view>
+            <!-- <view v-if="item.rand_picurl" class="mb5">
+              <view><img class="mb5-cover" :src="item.rand_picurl" /></view>
+            </view> -->
 	      		<view class="mb5">
               <view>专辑：</view><view class="mb5-content">{{item.album}}</view>
             </view>
@@ -47,6 +48,9 @@
 	      </u-collapse>
         <div class="line"></div>
       </view>
+      <div class="add_all_box">
+        <Button class="add_all" type="primary" @click="addAllList">全部添加至歌单</Button>        
+      </div>
 		</u-popup>
 	</view>
 </template>
@@ -56,6 +60,7 @@
 	export default {
 		data() {
 			return {
+        isLoading: false,
 				title: 'mini音乐',
         searchSongName: '',
         searchSongList: [],
@@ -130,6 +135,11 @@
 		},
 		methods: {
       ...mapMutations(['addList', 'minusList','updateCurrentIndex', 'updateCurrentMusic', 'updateSearchListPlayStatus', 'updateCurrentPlayer']),
+      addAllList(){
+        this.searchSongList.forEach(item => {
+          this.addList(item)
+        })
+      },
       addToList(item){
         this.addList(item)
         console.log(this)
@@ -146,6 +156,7 @@
           })
           return
         }
+        this.isLoading = true
         let res = await this.$api.searchSong({
           search: this.searchSongName
         })
@@ -174,11 +185,13 @@
             icon: 'none'
           })
         }
+        this.isLoading = false
       },
       async searchRandMusic(sort, isInit){
         if(isInit){
           this.searchSongList = []
         }
+        this.isLoading = true
         let res = await this.$api.searchRandMusic({
           sort,
           format: 'json'
@@ -205,6 +218,7 @@
           }
 
           if(this.searchSongList.length >9) {
+            this.isLoading = false
             let list = this.searchSongList.map((item)=>{
               return {
                 status: true
@@ -313,6 +327,16 @@
   .hover-class {
     color: red!important;
   }
+  .add_all_box {
+    height: 50px;
+    .add_all {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 300px;
+    }
+  }
+
   /deep/.u-collapse-title {
     padding-left: 5px;
   }
@@ -364,7 +388,28 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+    padding-bottom: 200px;
 		justify-content: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    .search-loading {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;  
+      z-index: 9999;
+      background-color: rgba(0,0,0,0.1);
+      /deep/.u-loading-circle {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+    }
 	}
   .search {
     width: 100%;

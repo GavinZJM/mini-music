@@ -4,9 +4,9 @@
 		<view v-for="(item, index) in list" :key="item.id" type="success">
 	    <u-collapse ref="popup" :arrow="false">
 	    	<u-collapse-item class="collapse-item" :title="`专辑：${item.album}`" :disabled="true" :open="true" @click="playMusic">
-	    		<view v-if="item.picurl" class="mb5">
-            <view><img class="mb5-cover" :src="item.picurl" /></view>
-          </view>
+	    		<!-- <view v-if="item.rand_picurl" class="mb5">
+            <view><img class="mb5-cover" :src="item.rand_picurl" /></view>
+          </view> -->
           <view class="mb5">
             <view>专辑：</view><view class="mb5-content">{{item.album}}</view>
           </view>
